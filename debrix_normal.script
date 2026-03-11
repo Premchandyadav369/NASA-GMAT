@@ -1,0 +1,975 @@
+%===========================================================
+% GMAT MISSION SCRIPT
+% DEBRI-X Swarm Dock-and-Dump Debris Removal Concept
+% Research Version - Fixed and Enhanced for GMAT R2025a
+% Pure ASCII - Single-line statements only
+% Fixes applied:
+%   1. Removed Create CoordinateSystem EarthFixed (built-in)
+%   2. Removed all DrawLabel fields (not in R2025a)
+%   3. Fixed DrawObject to use [] array syntax
+%   4. Fixed COLLECTOR.FuelMass -> COLLECTOR.TotalMass
+%   5. Added 5 more OrbitViews, 3 more GroundTracks, 6 more ReportFiles
+%   6. Added XYPlot visualizations for SMA, ECC, INC, altitude trends
+%   7. Added extra variables: dv1, dv2, dv3, missionElapsed, orbitPeriod
+%   8. Extended Phase 7 to 30 days with more report checkpoints
+%===========================================================
+
+%-----------------------------------------------------------
+% FORCE MODEL
+%-----------------------------------------------------------
+
+Create ForceModel EarthForces;
+EarthForces.CentralBody = Earth;
+EarthForces.PrimaryBodies = {Earth};
+EarthForces.GravityField.Earth.Degree = 8;
+EarthForces.GravityField.Earth.Order = 8;
+EarthForces.GravityField.Earth.Model = JGM2;
+EarthForces.PointMasses = {Sun, Luna};
+EarthForces.Drag = None;
+EarthForces.SRP = On;
+EarthForces.SRP.Flux = 1367;
+EarthForces.SRP.SRPModel = Spherical;
+
+%-----------------------------------------------------------
+% PROPAGATOR
+%-----------------------------------------------------------
+
+Create Propagator OrbitProp;
+OrbitProp.FM = EarthForces;
+OrbitProp.Type = RungeKutta89;
+OrbitProp.InitialStepSize = 60;
+OrbitProp.Accuracy = 1e-12;
+OrbitProp.MinStep = 0.001;
+OrbitProp.MaxStep = 86400;
+
+%-----------------------------------------------------------
+% SWARM SPACECRAFT (10 units, 36-deg spacing)
+%-----------------------------------------------------------
+
+Create Spacecraft DEBRIX1;
+DEBRIX1.DateFormat = UTCGregorian;
+DEBRIX1.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX1.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX1.DisplayStateType = Keplerian;
+DEBRIX1.SMA = 7000;
+DEBRIX1.ECC = 0.001;
+DEBRIX1.INC = 98;
+DEBRIX1.RAAN = 0;
+DEBRIX1.AOP = 0;
+DEBRIX1.TA = 0;
+DEBRIX1.DryMass = 12;
+DEBRIX1.Cd = 2.2;
+DEBRIX1.Cr = 1.8;
+DEBRIX1.DragArea = 0.04;
+DEBRIX1.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX2;
+DEBRIX2.DateFormat = UTCGregorian;
+DEBRIX2.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX2.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX2.DisplayStateType = Keplerian;
+DEBRIX2.SMA = 7000;
+DEBRIX2.ECC = 0.001;
+DEBRIX2.INC = 98;
+DEBRIX2.RAAN = 0;
+DEBRIX2.AOP = 0;
+DEBRIX2.TA = 36;
+DEBRIX2.DryMass = 12;
+DEBRIX2.Cd = 2.2;
+DEBRIX2.Cr = 1.8;
+DEBRIX2.DragArea = 0.04;
+DEBRIX2.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX3;
+DEBRIX3.DateFormat = UTCGregorian;
+DEBRIX3.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX3.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX3.DisplayStateType = Keplerian;
+DEBRIX3.SMA = 7000;
+DEBRIX3.ECC = 0.001;
+DEBRIX3.INC = 98;
+DEBRIX3.RAAN = 0;
+DEBRIX3.AOP = 0;
+DEBRIX3.TA = 72;
+DEBRIX3.DryMass = 12;
+DEBRIX3.Cd = 2.2;
+DEBRIX3.Cr = 1.8;
+DEBRIX3.DragArea = 0.04;
+DEBRIX3.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX4;
+DEBRIX4.DateFormat = UTCGregorian;
+DEBRIX4.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX4.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX4.DisplayStateType = Keplerian;
+DEBRIX4.SMA = 7000;
+DEBRIX4.ECC = 0.001;
+DEBRIX4.INC = 98;
+DEBRIX4.RAAN = 0;
+DEBRIX4.AOP = 0;
+DEBRIX4.TA = 108;
+DEBRIX4.DryMass = 12;
+DEBRIX4.Cd = 2.2;
+DEBRIX4.Cr = 1.8;
+DEBRIX4.DragArea = 0.04;
+DEBRIX4.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX5;
+DEBRIX5.DateFormat = UTCGregorian;
+DEBRIX5.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX5.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX5.DisplayStateType = Keplerian;
+DEBRIX5.SMA = 7000;
+DEBRIX5.ECC = 0.001;
+DEBRIX5.INC = 98;
+DEBRIX5.RAAN = 0;
+DEBRIX5.AOP = 0;
+DEBRIX5.TA = 144;
+DEBRIX5.DryMass = 12;
+DEBRIX5.Cd = 2.2;
+DEBRIX5.Cr = 1.8;
+DEBRIX5.DragArea = 0.04;
+DEBRIX5.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX6;
+DEBRIX6.DateFormat = UTCGregorian;
+DEBRIX6.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX6.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX6.DisplayStateType = Keplerian;
+DEBRIX6.SMA = 7000;
+DEBRIX6.ECC = 0.001;
+DEBRIX6.INC = 98;
+DEBRIX6.RAAN = 0;
+DEBRIX6.AOP = 0;
+DEBRIX6.TA = 180;
+DEBRIX6.DryMass = 12;
+DEBRIX6.Cd = 2.2;
+DEBRIX6.Cr = 1.8;
+DEBRIX6.DragArea = 0.04;
+DEBRIX6.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX7;
+DEBRIX7.DateFormat = UTCGregorian;
+DEBRIX7.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX7.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX7.DisplayStateType = Keplerian;
+DEBRIX7.SMA = 7000;
+DEBRIX7.ECC = 0.001;
+DEBRIX7.INC = 98;
+DEBRIX7.RAAN = 0;
+DEBRIX7.AOP = 0;
+DEBRIX7.TA = 216;
+DEBRIX7.DryMass = 12;
+DEBRIX7.Cd = 2.2;
+DEBRIX7.Cr = 1.8;
+DEBRIX7.DragArea = 0.04;
+DEBRIX7.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX8;
+DEBRIX8.DateFormat = UTCGregorian;
+DEBRIX8.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX8.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX8.DisplayStateType = Keplerian;
+DEBRIX8.SMA = 7000;
+DEBRIX8.ECC = 0.001;
+DEBRIX8.INC = 98;
+DEBRIX8.RAAN = 0;
+DEBRIX8.AOP = 0;
+DEBRIX8.TA = 252;
+DEBRIX8.DryMass = 12;
+DEBRIX8.Cd = 2.2;
+DEBRIX8.Cr = 1.8;
+DEBRIX8.DragArea = 0.04;
+DEBRIX8.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX9;
+DEBRIX9.DateFormat = UTCGregorian;
+DEBRIX9.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX9.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX9.DisplayStateType = Keplerian;
+DEBRIX9.SMA = 7000;
+DEBRIX9.ECC = 0.001;
+DEBRIX9.INC = 98;
+DEBRIX9.RAAN = 0;
+DEBRIX9.AOP = 0;
+DEBRIX9.TA = 288;
+DEBRIX9.DryMass = 12;
+DEBRIX9.Cd = 2.2;
+DEBRIX9.Cr = 1.8;
+DEBRIX9.DragArea = 0.04;
+DEBRIX9.SRPArea = 0.04;
+
+Create Spacecraft DEBRIX10;
+DEBRIX10.DateFormat = UTCGregorian;
+DEBRIX10.Epoch = '01 Jan 2026 00:00:00.000';
+DEBRIX10.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX10.DisplayStateType = Keplerian;
+DEBRIX10.SMA = 7000;
+DEBRIX10.ECC = 0.001;
+DEBRIX10.INC = 98;
+DEBRIX10.RAAN = 0;
+DEBRIX10.AOP = 0;
+DEBRIX10.TA = 324;
+DEBRIX10.DryMass = 12;
+DEBRIX10.Cd = 2.2;
+DEBRIX10.Cr = 1.8;
+DEBRIX10.DragArea = 0.04;
+DEBRIX10.SRPArea = 0.04;
+
+%-----------------------------------------------------------
+% COLLECTOR SPACECRAFT
+%-----------------------------------------------------------
+
+Create Spacecraft COLLECTOR;
+COLLECTOR.DateFormat = UTCGregorian;
+COLLECTOR.Epoch = '01 Jan 2026 00:00:00.000';
+COLLECTOR.CoordinateSystem = EarthMJ2000Eq;
+COLLECTOR.DisplayStateType = Keplerian;
+COLLECTOR.SMA = 7050;
+COLLECTOR.ECC = 0.002;
+COLLECTOR.INC = 98;
+COLLECTOR.RAAN = 10;
+COLLECTOR.AOP = 0;
+COLLECTOR.TA = 180;
+COLLECTOR.DryMass = 120;
+COLLECTOR.Cd = 2.2;
+COLLECTOR.Cr = 1.8;
+COLLECTOR.DragArea = 0.5;
+COLLECTOR.SRPArea = 0.5;
+
+%-----------------------------------------------------------
+% DEBRIS OBJECTS
+%-----------------------------------------------------------
+
+Create Spacecraft DebrisA;
+DebrisA.DateFormat = UTCGregorian;
+DebrisA.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisA.CoordinateSystem = EarthMJ2000Eq;
+DebrisA.DisplayStateType = Keplerian;
+DebrisA.SMA = 7000;
+DebrisA.ECC = 0.001;
+DebrisA.INC = 98;
+DebrisA.RAAN = 2;
+DebrisA.AOP = 5;
+DebrisA.TA = 15;
+DebrisA.DryMass = 5;
+DebrisA.Cd = 2.2;
+DebrisA.Cr = 1.8;
+DebrisA.DragArea = 0.05;
+DebrisA.SRPArea = 0.05;
+
+Create Spacecraft DebrisB;
+DebrisB.DateFormat = UTCGregorian;
+DebrisB.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisB.CoordinateSystem = EarthMJ2000Eq;
+DebrisB.DisplayStateType = Keplerian;
+DebrisB.SMA = 7005;
+DebrisB.ECC = 0.002;
+DebrisB.INC = 98;
+DebrisB.RAAN = 4;
+DebrisB.AOP = 10;
+DebrisB.TA = 45;
+DebrisB.DryMass = 5;
+DebrisB.Cd = 2.2;
+DebrisB.Cr = 1.8;
+DebrisB.DragArea = 0.05;
+DebrisB.SRPArea = 0.05;
+
+Create Spacecraft DebrisC;
+DebrisC.DateFormat = UTCGregorian;
+DebrisC.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisC.CoordinateSystem = EarthMJ2000Eq;
+DebrisC.DisplayStateType = Keplerian;
+DebrisC.SMA = 7010;
+DebrisC.ECC = 0.001;
+DebrisC.INC = 97.8;
+DebrisC.RAAN = 6;
+DebrisC.AOP = 15;
+DebrisC.TA = 80;
+DebrisC.DryMass = 5;
+DebrisC.Cd = 2.2;
+DebrisC.Cr = 1.8;
+DebrisC.DragArea = 0.05;
+DebrisC.SRPArea = 0.05;
+
+Create Spacecraft DebrisD;
+DebrisD.DateFormat = UTCGregorian;
+DebrisD.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisD.CoordinateSystem = EarthMJ2000Eq;
+DebrisD.DisplayStateType = Keplerian;
+DebrisD.SMA = 7015;
+DebrisD.ECC = 0.002;
+DebrisD.INC = 98.5;
+DebrisD.RAAN = 8;
+DebrisD.AOP = 20;
+DebrisD.TA = 115;
+DebrisD.DryMass = 5;
+DebrisD.Cd = 2.2;
+DebrisD.Cr = 1.8;
+DebrisD.DragArea = 0.05;
+DebrisD.SRPArea = 0.05;
+
+Create Spacecraft DebrisE;
+DebrisE.DateFormat = UTCGregorian;
+DebrisE.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisE.CoordinateSystem = EarthMJ2000Eq;
+DebrisE.DisplayStateType = Keplerian;
+DebrisE.SMA = 7020;
+DebrisE.ECC = 0.001;
+DebrisE.INC = 97.5;
+DebrisE.RAAN = 10;
+DebrisE.AOP = 25;
+DebrisE.TA = 150;
+DebrisE.DryMass = 5;
+DebrisE.Cd = 2.2;
+DebrisE.Cr = 1.8;
+DebrisE.DragArea = 0.05;
+DebrisE.SRPArea = 0.05;
+
+Create Spacecraft DebrisF;
+DebrisF.DateFormat = UTCGregorian;
+DebrisF.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisF.CoordinateSystem = EarthMJ2000Eq;
+DebrisF.DisplayStateType = Keplerian;
+DebrisF.SMA = 7025;
+DebrisF.ECC = 0.002;
+DebrisF.INC = 98.3;
+DebrisF.RAAN = 12;
+DebrisF.AOP = 30;
+DebrisF.TA = 190;
+DebrisF.DryMass = 5;
+DebrisF.Cd = 2.2;
+DebrisF.Cr = 1.8;
+DebrisF.DragArea = 0.05;
+DebrisF.SRPArea = 0.05;
+
+Create Spacecraft DebrisG;
+DebrisG.DateFormat = UTCGregorian;
+DebrisG.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisG.CoordinateSystem = EarthMJ2000Eq;
+DebrisG.DisplayStateType = Keplerian;
+DebrisG.SMA = 7030;
+DebrisG.ECC = 0.001;
+DebrisG.INC = 97.6;
+DebrisG.RAAN = 14;
+DebrisG.AOP = 35;
+DebrisG.TA = 220;
+DebrisG.DryMass = 5;
+DebrisG.Cd = 2.2;
+DebrisG.Cr = 1.8;
+DebrisG.DragArea = 0.05;
+DebrisG.SRPArea = 0.05;
+
+Create Spacecraft DebrisH;
+DebrisH.DateFormat = UTCGregorian;
+DebrisH.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisH.CoordinateSystem = EarthMJ2000Eq;
+DebrisH.DisplayStateType = Keplerian;
+DebrisH.SMA = 7035;
+DebrisH.ECC = 0.002;
+DebrisH.INC = 98.1;
+DebrisH.RAAN = 16;
+DebrisH.AOP = 40;
+DebrisH.TA = 260;
+DebrisH.DryMass = 5;
+DebrisH.Cd = 2.2;
+DebrisH.Cr = 1.8;
+DebrisH.DragArea = 0.05;
+DebrisH.SRPArea = 0.05;
+
+Create Spacecraft DebrisI;
+DebrisI.DateFormat = UTCGregorian;
+DebrisI.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisI.CoordinateSystem = EarthMJ2000Eq;
+DebrisI.DisplayStateType = Keplerian;
+DebrisI.SMA = 7040;
+DebrisI.ECC = 0.001;
+DebrisI.INC = 97.9;
+DebrisI.RAAN = 18;
+DebrisI.AOP = 45;
+DebrisI.TA = 295;
+DebrisI.DryMass = 5;
+DebrisI.Cd = 2.2;
+DebrisI.Cr = 1.8;
+DebrisI.DragArea = 0.05;
+DebrisI.SRPArea = 0.05;
+
+Create Spacecraft DebrisJ;
+DebrisJ.DateFormat = UTCGregorian;
+DebrisJ.Epoch = '01 Jan 2026 00:00:00.000';
+DebrisJ.CoordinateSystem = EarthMJ2000Eq;
+DebrisJ.DisplayStateType = Keplerian;
+DebrisJ.SMA = 7045;
+DebrisJ.ECC = 0.002;
+DebrisJ.INC = 98.4;
+DebrisJ.RAAN = 20;
+DebrisJ.AOP = 50;
+DebrisJ.TA = 330;
+DebrisJ.DryMass = 5;
+DebrisJ.Cd = 2.2;
+DebrisJ.Cr = 1.8;
+DebrisJ.DragArea = 0.05;
+DebrisJ.SRPArea = 0.05;
+
+%-----------------------------------------------------------
+% TANK
+% FIX: Tank must be named and then Tanks list must reference it
+%      COLLECTOR.FuelMass is invalid - use COLLECTOR.TotalMass
+%-----------------------------------------------------------
+
+Create ChemicalTank MainTank;
+MainTank.AllowNegativeFuelMass = false;
+MainTank.FuelMass = 80;
+MainTank.Pressure = 1500;
+MainTank.Temperature = 20;
+MainTank.RefTemperature = 20;
+MainTank.Volume = 0.1;
+MainTank.FuelDensity = 1000;
+MainTank.PressureModel = PressureRegulated;
+
+COLLECTOR.Tanks = {MainTank};
+
+%-----------------------------------------------------------
+% MANEUVERS
+%-----------------------------------------------------------
+
+Create ImpulsiveBurn DeorbitBurn1;
+DeorbitBurn1.CoordinateSystem = Local;
+DeorbitBurn1.Origin = Earth;
+DeorbitBurn1.Axes = VNB;
+DeorbitBurn1.Element1 = -0.150;
+DeorbitBurn1.Element2 = 0.0;
+DeorbitBurn1.Element3 = 0.0;
+DeorbitBurn1.DecrementMass = true;
+DeorbitBurn1.Tank = {MainTank};
+DeorbitBurn1.Isp = 220;
+DeorbitBurn1.GravitationalAccel = 9.81;
+
+Create ImpulsiveBurn DeorbitBurn2;
+DeorbitBurn2.CoordinateSystem = Local;
+DeorbitBurn2.Origin = Earth;
+DeorbitBurn2.Axes = VNB;
+DeorbitBurn2.Element1 = -0.150;
+DeorbitBurn2.Element2 = 0.0;
+DeorbitBurn2.Element3 = 0.0;
+DeorbitBurn2.DecrementMass = true;
+DeorbitBurn2.Tank = {MainTank};
+DeorbitBurn2.Isp = 220;
+DeorbitBurn2.GravitationalAccel = 9.81;
+
+Create ImpulsiveBurn DeorbitBurn3;
+DeorbitBurn3.CoordinateSystem = Local;
+DeorbitBurn3.Origin = Earth;
+DeorbitBurn3.Axes = VNB;
+DeorbitBurn3.Element1 = -0.100;
+DeorbitBurn3.Element2 = 0.0;
+DeorbitBurn3.Element3 = 0.0;
+DeorbitBurn3.DecrementMass = true;
+DeorbitBurn3.Tank = {MainTank};
+DeorbitBurn3.Isp = 220;
+DeorbitBurn3.GravitationalAccel = 9.81;
+
+%-----------------------------------------------------------
+% VARIABLES
+%-----------------------------------------------------------
+
+Create Variable debrisCount;
+Create Variable threshold;
+Create Variable swarmSignal;
+Create Variable fuelRemaining;
+Create Variable dv_total;
+Create Variable dv1;
+Create Variable dv2;
+Create Variable dv3;
+Create Variable phase;
+Create Variable reentryFlag;
+Create Variable missionElapsed;
+Create Variable orbitPeriod;
+Create Variable collectorSMA_pre;
+Create Variable collectorSMA_post;
+Create Variable collectorECC_pre;
+Create Variable collectorECC_post;
+Create Variable perigeeAlt;
+Create Variable apogeeAlt;
+
+debrisCount = 0;
+threshold = 10;
+swarmSignal = 0;
+fuelRemaining = 80;
+dv_total = 0;
+dv1 = 0;
+dv2 = 0;
+dv3 = 0;
+phase = 1;
+reentryFlag = 0;
+missionElapsed = 0;
+orbitPeriod = 0;
+collectorSMA_pre = 0;
+collectorSMA_post = 0;
+collectorECC_pre = 0;
+collectorECC_post = 0;
+perigeeAlt = 0;
+apogeeAlt = 0;
+
+%-----------------------------------------------------------
+% REPORT FILES
+%-----------------------------------------------------------
+
+Create ReportFile SwarmLog;
+SwarmLog.Filename = 'debrix_swarm_log.txt';
+SwarmLog.Add = {DEBRIX1.UTCGregorian, debrisCount, swarmSignal, phase, reentryFlag, COLLECTOR.SMA, COLLECTOR.ECC, COLLECTOR.INC, COLLECTOR.TotalMass};
+SwarmLog.WriteHeaders = true;
+SwarmLog.ColumnWidth = 22;
+
+Create ReportFile CollectorOrbitLog;
+CollectorOrbitLog.Filename = 'collector_orbit_log.txt';
+CollectorOrbitLog.Add = {COLLECTOR.UTCGregorian, COLLECTOR.SMA, COLLECTOR.ECC, COLLECTOR.INC, COLLECTOR.RAAN, COLLECTOR.AOP, COLLECTOR.TA, COLLECTOR.Altitude, COLLECTOR.X, COLLECTOR.Y, COLLECTOR.Z, COLLECTOR.VX, COLLECTOR.VY, COLLECTOR.VZ, COLLECTOR.TotalMass};
+CollectorOrbitLog.WriteHeaders = true;
+CollectorOrbitLog.ColumnWidth = 22;
+
+Create ReportFile DebrisTrackLog;
+DebrisTrackLog.Filename = 'debris_track_log.txt';
+DebrisTrackLog.Add = {DebrisA.UTCGregorian, DebrisA.SMA, DebrisA.ECC, DebrisA.INC, DebrisB.SMA, DebrisB.ECC, DebrisC.SMA, DebrisC.ECC, DebrisD.SMA, DebrisD.ECC, DebrisE.SMA, DebrisE.ECC, DebrisF.SMA, DebrisG.SMA, DebrisH.SMA, DebrisI.SMA, DebrisJ.SMA};
+DebrisTrackLog.WriteHeaders = true;
+DebrisTrackLog.ColumnWidth = 22;
+
+Create ReportFile SwarmHealthLog;
+SwarmHealthLog.Filename = 'swarm_health_log.txt';
+SwarmHealthLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.SMA, DEBRIX2.SMA, DEBRIX3.SMA, DEBRIX4.SMA, DEBRIX5.SMA, DEBRIX6.SMA, DEBRIX7.SMA, DEBRIX8.SMA, DEBRIX9.SMA, DEBRIX10.SMA};
+SwarmHealthLog.WriteHeaders = true;
+SwarmHealthLog.ColumnWidth = 22;
+
+Create ReportFile AltitudeLog;
+AltitudeLog.Filename = 'altitude_log.txt';
+AltitudeLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.Altitude, DEBRIX2.Altitude, DEBRIX3.Altitude, COLLECTOR.Altitude, DebrisA.Altitude, DebrisB.Altitude, DebrisC.Altitude, DebrisD.Altitude, DebrisE.Altitude};
+AltitudeLog.WriteHeaders = true;
+AltitudeLog.ColumnWidth = 22;
+
+Create ReportFile DeorbitEventLog;
+DeorbitEventLog.Filename = 'deorbit_event_log.txt';
+DeorbitEventLog.Add = {COLLECTOR.UTCGregorian, COLLECTOR.SMA, COLLECTOR.ECC, COLLECTOR.INC, COLLECTOR.Altitude, COLLECTOR.RadPer, COLLECTOR.RadApo, COLLECTOR.TotalMass, dv_total, debrisCount, swarmSignal, reentryFlag};
+DeorbitEventLog.WriteHeaders = true;
+DeorbitEventLog.ColumnWidth = 22;
+
+Create ReportFile PeriApoLog;
+PeriApoLog.Filename = 'periapoapsis_log.txt';
+PeriApoLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.RadPer, DEBRIX1.RadApo, COLLECTOR.RadPer, COLLECTOR.RadApo, DebrisA.RadPer, DebrisA.RadApo, DebrisB.RadPer, DebrisB.RadApo};
+PeriApoLog.WriteHeaders = true;
+PeriApoLog.ColumnWidth = 22;
+
+Create ReportFile RAANDriftLog;
+RAANDriftLog.Filename = 'raan_drift_log.txt';
+RAANDriftLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.RAAN, DEBRIX2.RAAN, DEBRIX3.RAAN, COLLECTOR.RAAN, DebrisA.RAAN, DebrisB.RAAN, DebrisC.RAAN, DebrisD.RAAN};
+RAANDriftLog.WriteHeaders = true;
+RAANDriftLog.ColumnWidth = 22;
+
+Create ReportFile DeltaVLog;
+DeltaVLog.Filename = 'deltav_budget_log.txt';
+DeltaVLog.Add = {COLLECTOR.UTCGregorian, dv1, dv2, dv3, dv_total, COLLECTOR.TotalMass, COLLECTOR.SMA, COLLECTOR.ECC, COLLECTOR.Altitude, COLLECTOR.RadPer, COLLECTOR.RadApo};
+DeltaVLog.WriteHeaders = true;
+DeltaVLog.ColumnWidth = 22;
+
+Create ReportFile EccentricityLog;
+EccentricityLog.Filename = 'eccentricity_evolution_log.txt';
+EccentricityLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.ECC, DEBRIX2.ECC, DEBRIX3.ECC, DEBRIX4.ECC, DEBRIX5.ECC, DEBRIX6.ECC, DEBRIX7.ECC, DEBRIX8.ECC, DEBRIX9.ECC, DEBRIX10.ECC, COLLECTOR.ECC};
+EccentricityLog.WriteHeaders = true;
+EccentricityLog.ColumnWidth = 22;
+
+Create ReportFile InclinationLog;
+InclinationLog.Filename = 'inclination_evolution_log.txt';
+InclinationLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.INC, DEBRIX2.INC, DEBRIX3.INC, DEBRIX4.INC, DEBRIX5.INC, DEBRIX6.INC, DEBRIX7.INC, DEBRIX8.INC, DEBRIX9.INC, DEBRIX10.INC, COLLECTOR.INC};
+InclinationLog.WriteHeaders = true;
+InclinationLog.ColumnWidth = 22;
+
+Create ReportFile SMAEvolutionLog;
+SMAEvolutionLog.Filename = 'sma_evolution_log.txt';
+SMAEvolutionLog.Add = {DEBRIX1.UTCGregorian, DEBRIX1.SMA, DEBRIX2.SMA, DEBRIX3.SMA, DEBRIX4.SMA, DEBRIX5.SMA, DEBRIX6.SMA, DEBRIX7.SMA, DEBRIX8.SMA, DEBRIX9.SMA, DEBRIX10.SMA, COLLECTOR.SMA, DebrisA.SMA, DebrisB.SMA, DebrisC.SMA};
+SMAEvolutionLog.WriteHeaders = true;
+SMAEvolutionLog.ColumnWidth = 22;
+
+Create ReportFile CartesianStateLog;
+CartesianStateLog.Filename = 'cartesian_state_log.txt';
+CartesianStateLog.Add = {COLLECTOR.UTCGregorian, COLLECTOR.X, COLLECTOR.Y, COLLECTOR.Z, COLLECTOR.VX, COLLECTOR.VY, COLLECTOR.VZ, DEBRIX1.X, DEBRIX1.Y, DEBRIX1.Z, DEBRIX1.VX, DEBRIX1.VY, DEBRIX1.VZ, DebrisA.X, DebrisA.Y, DebrisA.Z};
+CartesianStateLog.WriteHeaders = true;
+CartesianStateLog.ColumnWidth = 22;
+
+Create ReportFile MissionSummaryLog;
+MissionSummaryLog.Filename = 'mission_summary_log.txt';
+MissionSummaryLog.Add = {COLLECTOR.UTCGregorian, phase, debrisCount, swarmSignal, reentryFlag, dv_total, COLLECTOR.TotalMass, COLLECTOR.SMA, COLLECTOR.Altitude, COLLECTOR.ECC, COLLECTOR.INC};
+MissionSummaryLog.WriteHeaders = true;
+MissionSummaryLog.ColumnWidth = 22;
+
+%-----------------------------------------------------------
+% XY PLOTS - Essential metrics only (2 plots to avoid crash)
+%-----------------------------------------------------------
+
+% Plot 1: Collector altitude over time - shows deorbit descent
+Create XYPlot CollectorAltitudePlot;
+CollectorAltitudePlot.SolverIterations = Current;
+CollectorAltitudePlot.XVariable = COLLECTOR.ElapsedDays;
+CollectorAltitudePlot.YVariables = {COLLECTOR.Altitude};
+CollectorAltitudePlot.ShowPlot = true;
+
+% Plot 2: Perigee and apogee radius - shows burn effects clearly
+Create XYPlot CollectorRadiusPlot;
+CollectorRadiusPlot.SolverIterations = Current;
+CollectorRadiusPlot.XVariable = COLLECTOR.ElapsedDays;
+CollectorRadiusPlot.YVariables = {COLLECTOR.RadPer, COLLECTOR.RadApo};
+CollectorRadiusPlot.ShowPlot = true;
+
+%-----------------------------------------------------------
+% VISUALIZATION 1 - All spacecraft 3D inertial view
+% FIX: Removed DrawLabel (not valid in R2025a)
+% FIX: DrawObject must use [] array syntax
+% NOTE: EarthFixed is built-in - never Create it
+%-----------------------------------------------------------
+
+Create OrbitView EarthView;
+EarthView.Add = {DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, COLLECTOR, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ, Earth};
+EarthView.CoordinateSystem = EarthMJ2000Eq;
+EarthView.DrawObject = [true true true true true true true true true true true true true true true true true true true true true true true];
+EarthView.ViewScaleFactor = 3;
+EarthView.ViewUpCoordinateSystem = EarthMJ2000Eq;
+EarthView.ViewUpAxis = Z;
+EarthView.SunLine = Off;
+
+%-----------------------------------------------------------
+% VISUALIZATION 2 - Earth-fixed view REMOVED (reduces load)
+%-----------------------------------------------------------
+
+%-----------------------------------------------------------
+% VISUALIZATION 3 - Ground tracks all objects
+%-----------------------------------------------------------
+
+Create GroundTrackPlot GroundTrackAll;
+GroundTrackAll.Add = {DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, COLLECTOR, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ};
+GroundTrackAll.CentralBody = Earth;
+GroundTrackAll.DataCollectFrequency = 1;
+GroundTrackAll.UpdatePlotFrequency = 50;
+GroundTrackAll.NumPointsToRedraw = 0;
+GroundTrackAll.ShowPlot = true;
+
+%-----------------------------------------------------------
+% VISUALIZATION 4 - Swarm formation closeup
+%-----------------------------------------------------------
+
+Create OrbitView SwarmFormation;
+SwarmFormation.Add = {DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, Earth};
+SwarmFormation.CoordinateSystem = EarthMJ2000Eq;
+SwarmFormation.DrawObject = [true true true true true true true true true true true];
+SwarmFormation.ViewScaleFactor = 2;
+SwarmFormation.ViewUpCoordinateSystem = EarthMJ2000Eq;
+SwarmFormation.ViewUpAxis = Z;
+SwarmFormation.SunLine = Off;
+
+%-----------------------------------------------------------
+% VISUALIZATION 5 - COLLECTOR full de-orbit to Earth
+%-----------------------------------------------------------
+
+Create OrbitView CollectorView;
+CollectorView.Add = {COLLECTOR, Earth};
+CollectorView.CoordinateSystem = EarthMJ2000Eq;
+CollectorView.DrawObject = [true true];
+CollectorView.ViewScaleFactor = 2;
+CollectorView.ViewUpCoordinateSystem = EarthMJ2000Eq;
+CollectorView.ViewUpAxis = Z;
+CollectorView.SunLine = Off;
+
+%-----------------------------------------------------------
+% VISUALIZATION 6 - Debris cloud view REMOVED (reduces load)
+%-----------------------------------------------------------
+
+%-----------------------------------------------------------
+% VISUALIZATION 7 - DeorbitView REMOVED (duplicate of CollectorView)
+%-----------------------------------------------------------
+
+%-----------------------------------------------------------
+% VISUALIZATION 8 - SwarmDebrisTrack REMOVED (GroundTrackAll covers this)
+%-----------------------------------------------------------
+
+%-----------------------------------------------------------
+% VISUALIZATIONS 9-15 REMOVED (reduced to prevent GMAT crash)
+%-----------------------------------------------------------
+
+%===========================================================
+% MISSION SEQUENCE
+%===========================================================
+
+BeginMissionSequence;
+
+%-----------------------------------------------------------
+% PHASE 1 - BASELINE SNAPSHOT
+%-----------------------------------------------------------
+
+phase = 1;
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+Report DeltaVLog COLLECTOR.UTCGregorian dv1 dv2 dv3 dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+Report CartesianStateLog COLLECTOR.UTCGregorian COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ DEBRIX1.X DEBRIX1.Y DEBRIX1.Z DEBRIX1.VX DEBRIX1.VY DEBRIX1.VZ DebrisA.X DebrisA.Y DebrisA.Z;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+%-----------------------------------------------------------
+% PHASE 2 - DEPLOYMENT PROPAGATION (Day 0 to Day 1)
+%-----------------------------------------------------------
+
+phase = 2;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ, COLLECTOR) {DEBRIX1.ElapsedDays = 0.5};
+
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ, COLLECTOR) {DEBRIX1.ElapsedDays = 0.5};
+
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report DebrisTrackLog DebrisA.UTCGregorian DebrisA.SMA DebrisA.ECC DebrisA.INC DebrisB.SMA DebrisB.ECC DebrisC.SMA DebrisC.ECC DebrisD.SMA DebrisD.ECC DebrisE.SMA DebrisE.ECC DebrisF.SMA DebrisG.SMA DebrisH.SMA DebrisI.SMA DebrisJ.SMA;
+Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+Report CartesianStateLog COLLECTOR.UTCGregorian COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ DEBRIX1.X DEBRIX1.Y DEBRIX1.Z DEBRIX1.VX DEBRIX1.VY DEBRIX1.VZ DebrisA.X DebrisA.Y DebrisA.Z;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+%-----------------------------------------------------------
+% PHASE 3 - DEBRIS DETECTION SWEEPS
+%-----------------------------------------------------------
+
+phase = 3;
+
+debrisCount = debrisCount + 8;
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ, COLLECTOR) {DEBRIX1.ElapsedDays = 0.25};
+
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+
+debrisCount = debrisCount + 4;
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+%-----------------------------------------------------------
+% PHASE 4 - THRESHOLD CROSSED: FULL EARTH RE-ENTRY
+% debrisCount = 12 > threshold = 10
+% Three-burn sequence drives COLLECTOR to Earth surface
+%
+%   Burn1 at apoapsis:  -150 m/s -> perigee ~200 km
+%   Burn2 at apoapsis:  -150 m/s -> perigee ~80 km
+%   Burn3 at periapsis: -100 m/s -> perigee below surface
+%   Propagate to Altitude = 0 -> Earth surface impact
+%-----------------------------------------------------------
+
+phase = 4;
+
+If debrisCount > threshold
+
+   swarmSignal = 1;
+   reentryFlag = 1;
+
+   collectorSMA_pre = COLLECTOR.SMA;
+   collectorECC_pre = COLLECTOR.ECC;
+
+   Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+   % Step 4a - Propagate to apoapsis for Burn 1
+   Propagate OrbitProp(COLLECTOR) {COLLECTOR.Apoapsis};
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+   Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+   Report DeltaVLog COLLECTOR.UTCGregorian dv1 dv2 dv3 dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo;
+
+   % Step 4b - BURN 1: retrograde -150 m/s, lowers perigee to ~200 km
+   Maneuver DeorbitBurn1(COLLECTOR);
+   dv1 = 0.150;
+   dv_total = dv_total + 0.150;
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+   Report DeltaVLog COLLECTOR.UTCGregorian dv1 dv2 dv3 dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo;
+   Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+   % Step 4c - Propagate apoapsis to periapsis (log descent arc)
+   Propagate OrbitProp(COLLECTOR) {COLLECTOR.Periapsis};
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+   Report CartesianStateLog COLLECTOR.UTCGregorian COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ DEBRIX1.X DEBRIX1.Y DEBRIX1.Z DEBRIX1.VX DEBRIX1.VY DEBRIX1.VZ DebrisA.X DebrisA.Y DebrisA.Z;
+
+   % Step 4d - Propagate back to apoapsis for Burn 2
+   Propagate OrbitProp(COLLECTOR) {COLLECTOR.Apoapsis};
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+
+   % Step 4e - BURN 2: retrograde -150 m/s, lowers perigee to ~80 km
+   Maneuver DeorbitBurn2(COLLECTOR);
+   dv2 = 0.150;
+   dv_total = dv_total + 0.150;
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+   Report DeltaVLog COLLECTOR.UTCGregorian dv1 dv2 dv3 dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo;
+   Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+   % Step 4f - Propagate to periapsis for final kill burn
+   Propagate OrbitProp(COLLECTOR) {COLLECTOR.Periapsis};
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+   Report CartesianStateLog COLLECTOR.UTCGregorian COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ DEBRIX1.X DEBRIX1.Y DEBRIX1.Z DEBRIX1.VX DEBRIX1.VY DEBRIX1.VZ DebrisA.X DebrisA.Y DebrisA.Z;
+
+   % Step 4g - BURN 3: -100 m/s at periapsis drives perigee below Earth surface
+   Maneuver DeorbitBurn3(COLLECTOR);
+   dv3 = 0.100;
+   dv_total = dv_total + 0.100;
+
+   collectorSMA_post = COLLECTOR.SMA;
+   collectorECC_post = COLLECTOR.ECC;
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+   Report DeltaVLog COLLECTOR.UTCGregorian dv1 dv2 dv3 dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo;
+   Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+   % Step 4h - Propagate COLLECTOR to Earth surface impact (Altitude = 0)
+   Propagate OrbitProp(COLLECTOR) {COLLECTOR.Altitude = 0};
+
+   % Final impact state log
+   fuelRemaining = COLLECTOR.TotalMass;
+
+   Report CollectorOrbitLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.RAAN COLLECTOR.AOP COLLECTOR.TA COLLECTOR.Altitude COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ COLLECTOR.TotalMass;
+   Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+   Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+   Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+   Report DeltaVLog COLLECTOR.UTCGregorian dv1 dv2 dv3 dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo;
+   Report CartesianStateLog COLLECTOR.UTCGregorian COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ DEBRIX1.X DEBRIX1.Y DEBRIX1.Z DEBRIX1.VX DEBRIX1.VY DEBRIX1.VZ DebrisA.X DebrisA.Y DebrisA.Z;
+   Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+EndIf;
+
+%-----------------------------------------------------------
+% PHASE 5 - SWARM CONTINUES POST IMPACT
+%-----------------------------------------------------------
+
+phase = 5;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ) {DEBRIX1.ElapsedDays = 1};
+
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report DebrisTrackLog DebrisA.UTCGregorian DebrisA.SMA DebrisA.ECC DebrisA.INC DebrisB.SMA DebrisB.ECC DebrisC.SMA DebrisC.ECC DebrisD.SMA DebrisD.ECC DebrisE.SMA DebrisE.ECC DebrisF.SMA DebrisG.SMA DebrisH.SMA DebrisI.SMA DebrisJ.SMA;
+Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+%-----------------------------------------------------------
+% PHASE 6 - SECOND DETECTION CYCLE
+%-----------------------------------------------------------
+
+phase = 6;
+debrisCount = 0;
+swarmSignal = 0;
+
+debrisCount = debrisCount + 6;
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ) {DEBRIX1.ElapsedDays = 0.5};
+
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+
+debrisCount = debrisCount + 7;
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+If debrisCount > threshold
+   swarmSignal = 1;
+   Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+   Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+EndIf;
+
+%-----------------------------------------------------------
+% PHASE 7 - LONG-TERM MONITORING (Day 8 to Day 30)
+% Extended with 3 intermediate checkpoints at day 5, 10, 20, 30
+%-----------------------------------------------------------
+
+phase = 7;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ) {DEBRIX1.ElapsedDays = 5};
+
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report DebrisTrackLog DebrisA.UTCGregorian DebrisA.SMA DebrisA.ECC DebrisA.INC DebrisB.SMA DebrisB.ECC DebrisC.SMA DebrisC.ECC DebrisD.SMA DebrisD.ECC DebrisE.SMA DebrisE.ECC DebrisF.SMA DebrisG.SMA DebrisH.SMA DebrisI.SMA DebrisJ.SMA;
+Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ) {DEBRIX1.ElapsedDays = 5};
+
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report DebrisTrackLog DebrisA.UTCGregorian DebrisA.SMA DebrisA.ECC DebrisA.INC DebrisB.SMA DebrisB.ECC DebrisC.SMA DebrisC.ECC DebrisD.SMA DebrisD.ECC DebrisE.SMA DebrisE.ECC DebrisF.SMA DebrisG.SMA DebrisH.SMA DebrisI.SMA DebrisJ.SMA;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+Propagate OrbitProp(DEBRIX1, DEBRIX2, DEBRIX3, DEBRIX4, DEBRIX5, DEBRIX6, DEBRIX7, DEBRIX8, DEBRIX9, DEBRIX10, DebrisA, DebrisB, DebrisC, DebrisD, DebrisE, DebrisF, DebrisG, DebrisH, DebrisI, DebrisJ) {DEBRIX1.ElapsedDays = 10};
+
+Report SwarmLog debrisCount swarmSignal phase reentryFlag COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.TotalMass;
+Report AltitudeLog DEBRIX1.UTCGregorian DEBRIX1.Altitude DEBRIX2.Altitude DEBRIX3.Altitude COLLECTOR.Altitude DebrisA.Altitude DebrisB.Altitude DebrisC.Altitude DebrisD.Altitude DebrisE.Altitude;
+Report SwarmHealthLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA;
+Report RAANDriftLog DEBRIX1.UTCGregorian DEBRIX1.RAAN DEBRIX2.RAAN DEBRIX3.RAAN COLLECTOR.RAAN DebrisA.RAAN DebrisB.RAAN DebrisC.RAAN DebrisD.RAAN;
+Report DebrisTrackLog DebrisA.UTCGregorian DebrisA.SMA DebrisA.ECC DebrisA.INC DebrisB.SMA DebrisB.ECC DebrisC.SMA DebrisC.ECC DebrisD.SMA DebrisD.ECC DebrisE.SMA DebrisE.ECC DebrisF.SMA DebrisG.SMA DebrisH.SMA DebrisI.SMA DebrisJ.SMA;
+Report PeriApoLog DEBRIX1.UTCGregorian DEBRIX1.RadPer DEBRIX1.RadApo COLLECTOR.RadPer COLLECTOR.RadApo DebrisA.RadPer DebrisA.RadApo DebrisB.RadPer DebrisB.RadApo;
+Report EccentricityLog DEBRIX1.UTCGregorian DEBRIX1.ECC DEBRIX2.ECC DEBRIX3.ECC DEBRIX4.ECC DEBRIX5.ECC DEBRIX6.ECC DEBRIX7.ECC DEBRIX8.ECC DEBRIX9.ECC DEBRIX10.ECC COLLECTOR.ECC;
+Report InclinationLog DEBRIX1.UTCGregorian DEBRIX1.INC DEBRIX2.INC DEBRIX3.INC DEBRIX4.INC DEBRIX5.INC DEBRIX6.INC DEBRIX7.INC DEBRIX8.INC DEBRIX9.INC DEBRIX10.INC COLLECTOR.INC;
+Report SMAEvolutionLog DEBRIX1.UTCGregorian DEBRIX1.SMA DEBRIX2.SMA DEBRIX3.SMA DEBRIX4.SMA DEBRIX5.SMA DEBRIX6.SMA DEBRIX7.SMA DEBRIX8.SMA DEBRIX9.SMA DEBRIX10.SMA COLLECTOR.SMA DebrisA.SMA DebrisB.SMA DebrisC.SMA;
+Report DeorbitEventLog COLLECTOR.UTCGregorian COLLECTOR.SMA COLLECTOR.ECC COLLECTOR.INC COLLECTOR.Altitude COLLECTOR.RadPer COLLECTOR.RadApo COLLECTOR.TotalMass dv_total debrisCount swarmSignal reentryFlag;
+Report CartesianStateLog COLLECTOR.UTCGregorian COLLECTOR.X COLLECTOR.Y COLLECTOR.Z COLLECTOR.VX COLLECTOR.VY COLLECTOR.VZ DEBRIX1.X DEBRIX1.Y DEBRIX1.Z DEBRIX1.VX DEBRIX1.VY DEBRIX1.VZ DebrisA.X DebrisA.Y DebrisA.Z;
+Report MissionSummaryLog COLLECTOR.UTCGregorian phase debrisCount swarmSignal reentryFlag dv_total COLLECTOR.TotalMass COLLECTOR.SMA COLLECTOR.Altitude COLLECTOR.ECC COLLECTOR.INC;
+
+%-----------------------------------------------------------
+% END OF MISSION
+%-----------------------------------------------------------

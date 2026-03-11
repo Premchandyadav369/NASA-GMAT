@@ -1,0 +1,218 @@
+%==========================================================================
+% DEBRI-X : AUTONOMOUS SPACE DEBRIS REMOVAL SIMULATION
+% COMPATIBILITY: GMAT R2022a - R2025a
+%==========================================================================
+
+%--------------------------------------------------------------------------
+%   1. SPACECRAFT CONFIGURATION
+%--------------------------------------------------------------------------
+Create Spacecraft DEBRIX;
+DEBRIX.DateFormat = UTCGregorian;
+DEBRIX.Epoch = '01 Jan 2026 12:00:00.000';
+DEBRIX.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX.DisplayStateType = Keplerian;
+DEBRIX.SMA = 7078.00;
+DEBRIX.ECC = 0.001;
+DEBRIX.INC = 98.2;
+DEBRIX.RAAN = 10;
+DEBRIX.AOP = 0;
+DEBRIX.TA = 0;
+DEBRIX.DryMass = 150; 
+DEBRIX.Cd = 2.2;
+DEBRIX.Cr = 1.8;
+DEBRIX.DragArea = 1.2;
+DEBRIX.SRPArea = 1.0;
+
+%--- Fuel System ---
+Create ChemicalTank FuelTank1;
+FuelTank1.AllowNegativeFuelMass = false;
+FuelTank1.FuelMass = 50; 
+FuelTank1.Pressure = 1500;
+FuelTank1.Temperature = 20;
+FuelTank1.Volume = 0.1;
+
+Create ChemicalThruster MainEngine;
+MainEngine.DecrementMass = true;
+MainEngine.Tank = {FuelTank1};
+MainEngine.C1 = 20; 
+MainEngine.K1 = 300; 
+MainEngine.MixRatio = [ 1 ];
+
+% Assign hardware to spacecraft
+DEBRIX.Tanks = {FuelTank1};
+DEBRIX.Thrusters = {MainEngine};
+
+%--------------------------------------------------------------------------
+%   2. TARGET DEBRIS
+%--------------------------------------------------------------------------
+Create Spacecraft Debris_Alpha;
+Debris_Alpha.DateFormat = UTCGregorian;
+Debris_Alpha.Epoch = '01 Jan 2026 12:00:00.000';
+Debris_Alpha.CoordinateSystem = EarthMJ2000Eq;
+Debris_Alpha.DisplayStateType = Keplerian;
+Debris_Alpha.SMA = 7085;      
+Debris_Alpha.ECC = 0.002;
+Debris_Alpha.INC = 98.2;
+Debris_Alpha.RAAN = 10.1;     
+Debris_Alpha.AOP = 0;
+Debris_Alpha.TA = 5;          
+Debris_Alpha.DryMass = 10;
+Debris_Alpha.Cd = 2.5;
+Debris_Alpha.DragArea = 0.5;
+
+%--------------------------------------------------------------------------
+%   3. PHYSICS ENGINE (FORCE MODELS)
+%--------------------------------------------------------------------------
+Create ForceModel NearEarthFM;
+NearEarthFM.CentralBody = Earth;
+NearEarthFM.PrimaryBodies = {Earth};
+NearEarthFM.PointMasses = {Sun, Luna};
+NearEarthFM.Drag = None; 
+NearEarthFM.GravityField.Earth.Degree = 4;
+NearEarthFM.GravityField.Earth.Order = 4;
+NearEarthFM.GravityField.Earth.PotentialFile = 'JGM2.cof';
+
+Create Propagator HighPrecisionProp;
+HighPrecisionProp.FM = NearEarthFM; % FIXED: Uses .FM for R2025a
+HighPrecisionProp.Type = RungeKutta89;
+HighPrecisionProp.InitialStepSize = 60;
+HighPrecisionProp.Accuracy = 1e-11;
+HighPrecisionProp.MinStep = 0.001;
+HighPrecisionProp.MaxStep = 2700;
+
+%--------------------------------------------------------------------------
+%   4. MANEUVERS (Fixed Tank Assignments)
+%--------------------------------------------------------------------------
+Create ImpulsiveBurn Phasing_Burn;
+Phasing_Burn.CoordinateSystem = Local;
+Phasing_Burn.Origin = Earth;
+Phasing_Burn.Axes = VNB;
+Phasing_Burn.Element1 = 0.05; 
+Phasing_Burn.Element2 = 0;
+Phasing_Burn.Element3 = 0;
+Phasing_Burn.DecrementMass = true;
+Phasing_Burn.Tank = {FuelTank1}; % FIXED: Assigned Tank
+Phasing_Burn.Isp = 300;
+Phasing_Burn.GravitationalAccel = 9.81;
+
+Create ImpulsiveBurn Deorbit_Kick;
+Deorbit_Kick.CoordinateSystem = Local;
+Deorbit_Kick.Origin = Earth;
+Deorbit_Kick.Axes = VNB;
+Deorbit_Kick.Element1 = -0.15; 
+Deorbit_Kick.Element2 = 0;
+Deorbit_Kick.Element3 = 0;
+Deorbit_Kick.DecrementMass = true;
+Deorbit_Kick.Tank = {FuelTank1}; % FIXED: Assigned Tank
+Deorbit_Kick.Isp = 300;
+Deorbit_Kick.GravitationalAccel = 9.81;
+
+%--------------------------------------------------------------------------
+%   5. VARIABLES & VISUALIZATION
+%--------------------------------------------------------------------------
+Create Variable Range_Alpha CurrentFuel SafetyScore RelX RelY RelZ LoopCounter;
+
+% 3D View
+Create OrbitView ThreeDView;
+ThreeDView.SolverIterations = Current;
+ThreeDView.UpperLeft = [ 0 0 ];
+ThreeDView.Size = [ 0.5 1 ]; 
+ThreeDView.Add = {DEBRIX, Debris_Alpha, Earth};
+ThreeDView.CoordinateSystem = EarthMJ2000Eq;
+ThreeDView.DrawObject = [ true true true ];
+ThreeDView.DataCollectFrequency = 1;
+ThreeDView.UpdatePlotFrequency = 50;
+ThreeDView.NumPointsToRedraw = 0;
+ThreeDView.ShowPlot = true;
+ThreeDView.ViewPointReference = Earth;
+ThreeDView.ViewPointVector = [ 30000 0 0 ];
+
+% 2D Plot (Updated for R2025a)
+Create XYPlot RangePlot;
+RangePlot.SolverIterations = Current;
+RangePlot.UpperLeft = [ 0.5 0 ];
+RangePlot.Size = [ 0.5 0.5 ]; 
+RangePlot.XVariable = DEBRIX.ElapsedDays; % FIXED
+RangePlot.YVariables = {Range_Alpha};     % FIXED
+RangePlot.ShowGrid = true;
+RangePlot.ShowPlot = true;
+
+Create ReportFile DataLog;
+DataLog.Filename = 'DEBRIX_Mission_Data.txt';
+DataLog.Add = {DEBRIX.ElapsedDays, Range_Alpha, DEBRIX.FuelTank1.FuelMass, SafetyScore};
+
+%--------------------------------------------------------------------------
+%   6. MISSION SEQUENCE
+%--------------------------------------------------------------------------
+BeginMissionSequence;
+
+% --- INITIALIZATION ---
+CurrentFuel = DEBRIX.FuelTank1.FuelMass;
+SafetyScore = 100;
+LoopCounter = 0;
+
+Toggle DataLog On;
+
+% --- PHASE 1: DETECTION & APPROACH ---
+% Initial propagation (0.5 Days)
+Propagate HighPrecisionProp(DEBRIX, Debris_Alpha) {DEBRIX.ElapsedDays = 0.5};
+
+% MATH: Calculate Range manually
+RelX = DEBRIX.X - Debris_Alpha.X;
+RelY = DEBRIX.Y - Debris_Alpha.Y;
+RelZ = DEBRIX.Z - Debris_Alpha.Z;
+Range_Alpha = Sqrt(RelX^2 + RelY^2 + RelZ^2);
+
+Report DataLog DEBRIX.ElapsedDays Range_Alpha CurrentFuel SafetyScore;
+
+% --- LOGIC: AUTONOMOUS DECISION ---
+% If Range is large (> 10 km), perform Phasing Burn
+If Range_Alpha > 10
+    Maneuver Phasing_Burn(DEBRIX);
+EndIf
+
+% Propagate to close the distance (1.0 Day)
+Propagate HighPrecisionProp(DEBRIX, Debris_Alpha) {DEBRIX.ElapsedDays = 1.0};
+
+% Recalculate Range
+RelX = DEBRIX.X - Debris_Alpha.X;
+RelY = DEBRIX.Y - Debris_Alpha.Y;
+RelZ = DEBRIX.Z - Debris_Alpha.Z;
+Range_Alpha = Sqrt(RelX^2 + RelY^2 + RelZ^2);
+
+% --- PHASE 2: PROXIMITY OPERATIONS (FINE CONTROL) ---
+% Loop to simulate AI station keeping
+While LoopCounter < 3
+    
+    % Propagate 30 Minutes (1800 Seconds) - FIXED: Used ElapsedSecs
+    Propagate HighPrecisionProp(DEBRIX, Debris_Alpha) {DEBRIX.ElapsedSecs = 1800};
+    
+    % Update Range
+    RelX = DEBRIX.X - Debris_Alpha.X;
+    RelY = DEBRIX.Y - Debris_Alpha.Y;
+    RelZ = DEBRIX.Z - Debris_Alpha.Z;
+    Range_Alpha = Sqrt(RelX^2 + RelY^2 + RelZ^2);
+    
+    % Simulated "AI Logic" check
+    If Range_Alpha < 1.0 
+       SafetyScore = 50; % Caution
+    EndIf
+    
+    If Range_Alpha < 0.01 
+       SafetyScore = 0; % CRITICAL PROXIMITY
+    EndIf
+
+    Report DataLog DEBRIX.ElapsedDays Range_Alpha CurrentFuel SafetyScore;
+    
+    LoopCounter = LoopCounter + 1;
+EndWhile
+
+% --- PHASE 3: DEORBIT ---
+% Capture assumed successful. Perform Deorbit burn.
+Maneuver Deorbit_Kick(DEBRIX);
+
+% Re-entry Simulation (0.2 Days)
+Propagate HighPrecisionProp(DEBRIX, Debris_Alpha) {DEBRIX.ElapsedDays = 0.2};
+
+% Final Report
+Report DataLog DEBRIX.ElapsedDays Range_Alpha CurrentFuel SafetyScore;

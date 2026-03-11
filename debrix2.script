@@ -1,0 +1,235 @@
+%==========================================================================
+% DEBRI-X : THE "JUNK CLOUD" HUNTER (MULTI-PLOT EDITION)
+% COMPATIBILITY: GMAT R2025a (Fixed PlotTitle Error)
+%==========================================================================
+
+%--------------------------------------------------------------------------
+%   1. THE HERO SPACECRAFT (DEBRI-X)
+%--------------------------------------------------------------------------
+Create Spacecraft DEBRIX;
+DEBRIX.DateFormat = UTCGregorian;
+DEBRIX.Epoch = '01 Jan 2026 12:00:00.000';
+DEBRIX.CoordinateSystem = EarthMJ2000Eq;
+DEBRIX.DisplayStateType = Keplerian;
+DEBRIX.SMA = 7078.00;
+DEBRIX.ECC = 0.001;
+DEBRIX.INC = 98.2;
+DEBRIX.RAAN = 10;
+DEBRIX.AOP = 0;
+DEBRIX.TA = 0;
+DEBRIX.DryMass = 150; 
+DEBRIX.Cd = 2.2;
+DEBRIX.Cr = 1.8;
+DEBRIX.DragArea = 1.2;
+DEBRIX.SRPArea = 1.0;
+
+%--- Fuel System ---
+Create ChemicalTank FuelTank1;
+FuelTank1.AllowNegativeFuelMass = false;
+FuelTank1.FuelMass = 50; 
+FuelTank1.Pressure = 1500;
+FuelTank1.Temperature = 20;
+FuelTank1.Volume = 0.1;
+
+Create ChemicalThruster MainEngine;
+MainEngine.DecrementMass = true;
+MainEngine.Tank = {FuelTank1};
+MainEngine.C1 = 20; 
+MainEngine.K1 = 300; 
+MainEngine.MixRatio = [ 1 ];
+
+DEBRIX.Tanks = {FuelTank1};
+DEBRIX.Thrusters = {MainEngine};
+
+%--------------------------------------------------------------------------
+%   2. THE DEBRIS CLOUD (4 Objects)
+%--------------------------------------------------------------------------
+% Target 1: The Primary Target
+Create Spacecraft Junk_Primary;
+Junk_Primary.DateFormat = UTCGregorian;
+Junk_Primary.Epoch = '01 Jan 2026 12:00:00.000';
+Junk_Primary.CoordinateSystem = EarthMJ2000Eq;
+Junk_Primary.DisplayStateType = Keplerian;
+Junk_Primary.SMA = 7085;       
+Junk_Primary.ECC = 0.002;
+Junk_Primary.INC = 98.2;
+Junk_Primary.RAAN = 10.1;
+Junk_Primary.AOP = 0;
+Junk_Primary.TA = 5;
+
+% Junk 2: High Drift
+Create Spacecraft Junk_High;
+Junk_High.DateFormat = UTCGregorian;
+Junk_High.Epoch = '01 Jan 2026 12:00:00.000';
+Junk_High.CoordinateSystem = EarthMJ2000Eq;
+Junk_High.DisplayStateType = Keplerian;
+Junk_High.SMA = 7095;        
+Junk_High.ECC = 0.001;
+Junk_High.INC = 98.2;
+Junk_High.RAAN = 10.1;
+Junk_High.AOP = 0;
+Junk_High.TA = 5.2;
+
+% Junk 3: Low Drift
+Create Spacecraft Junk_Low;
+Junk_Low.DateFormat = UTCGregorian;
+Junk_Low.Epoch = '01 Jan 2026 12:00:00.000';
+Junk_Low.CoordinateSystem = EarthMJ2000Eq;
+Junk_Low.DisplayStateType = Keplerian;
+Junk_Low.SMA = 7075;         
+Junk_Low.ECC = 0.003;
+Junk_Low.INC = 98.2;
+Junk_Low.RAAN = 10.05;
+Junk_Low.AOP = 0;
+Junk_Low.TA = 4.8;
+
+% Junk 4: Out of Plane
+Create Spacecraft Junk_Skew;
+Junk_Skew.DateFormat = UTCGregorian;
+Junk_Skew.Epoch = '01 Jan 2026 12:00:00.000';
+Junk_Skew.CoordinateSystem = EarthMJ2000Eq;
+Junk_Skew.DisplayStateType = Keplerian;
+Junk_Skew.SMA = 7085;
+Junk_Skew.ECC = 0.002;
+Junk_Skew.INC = 98.3;        
+Junk_Skew.RAAN = 10.1;
+Junk_Skew.AOP = 0;
+Junk_Skew.TA = 5;
+
+%--------------------------------------------------------------------------
+%   3. PHYSICS ENGINE
+%--------------------------------------------------------------------------
+Create ForceModel NearEarthFM;
+NearEarthFM.CentralBody = Earth;
+NearEarthFM.PrimaryBodies = {Earth};
+NearEarthFM.PointMasses = {Sun, Luna};
+NearEarthFM.Drag = None; 
+NearEarthFM.GravityField.Earth.Degree = 4;
+NearEarthFM.GravityField.Earth.Order = 4;
+NearEarthFM.GravityField.Earth.PotentialFile = 'JGM2.cof';
+
+Create Propagator SpaceProp;
+SpaceProp.FM = NearEarthFM;
+SpaceProp.Type = RungeKutta89;
+SpaceProp.InitialStepSize = 60;
+SpaceProp.Accuracy = 1e-11;
+SpaceProp.MinStep = 0.001;
+SpaceProp.MaxStep = 2700;
+
+%--------------------------------------------------------------------------
+%   4. MANEUVERS
+%--------------------------------------------------------------------------
+Create ImpulsiveBurn Catch_Burn;
+Catch_Burn.CoordinateSystem = Local;
+Catch_Burn.Origin = Earth;
+Catch_Burn.Axes = VNB;
+Catch_Burn.Element1 = 0.05;   
+Catch_Burn.Element2 = 0;
+Catch_Burn.Element3 = 0;
+Catch_Burn.DecrementMass = true;
+Catch_Burn.Tank = {FuelTank1}; % Tank Assigned
+Catch_Burn.Isp = 300;
+Catch_Burn.GravitationalAccel = 9.81;
+
+Create ImpulsiveBurn Kill_Burn;
+Kill_Burn.CoordinateSystem = Local;
+Kill_Burn.Origin = Earth;
+Kill_Burn.Axes = VNB;
+Kill_Burn.Element1 = -0.15;   
+Kill_Burn.Element2 = 0;
+Kill_Burn.Element3 = 0;
+Kill_Burn.DecrementMass = true;
+Kill_Burn.Tank = {FuelTank1}; % Tank Assigned
+Kill_Burn.Isp = 300;
+Kill_Burn.GravitationalAccel = 9.81;
+
+%--------------------------------------------------------------------------
+%   5. VISUALIZATION (MANY PLOTS!)
+%--------------------------------------------------------------------------
+Create Variable Range CurrentFuel RelX RelY RelZ Altitude;
+
+% --- 1. The 3D Cloud View ---
+Create OrbitView CloudView;
+CloudView.SolverIterations = Current;
+CloudView.UpperLeft = [ 0 0 ];
+CloudView.Size = [ 0.5 0.5 ]; 
+CloudView.Add = {DEBRIX, Junk_Primary, Junk_High, Junk_Low, Junk_Skew, Earth};
+CloudView.CoordinateSystem = EarthMJ2000Eq;
+CloudView.DrawObject = [ true true true true true true ];
+CloudView.ViewPointReference = Earth;
+CloudView.ViewPointVector = [ 20000 10000 0 ];
+
+% --- 2. Range Plot (Distance to Target) ---
+Create XYPlot RangePlot;
+RangePlot.SolverIterations = Current;
+RangePlot.UpperLeft = [ 0.5 0 ]; % Top Right
+RangePlot.Size = [ 0.5 0.5 ]; 
+RangePlot.XVariable = DEBRIX.ElapsedDays;
+RangePlot.YVariables = {Range};
+RangePlot.ShowGrid = true;
+RangePlot.ShowPlot = true;
+
+% --- 3. Fuel Plot (Gas Tank Level) ---
+Create XYPlot FuelPlot;
+FuelPlot.SolverIterations = Current;
+FuelPlot.UpperLeft = [ 0 0.5 ]; % Bottom Left
+FuelPlot.Size = [ 0.5 0.5 ]; 
+FuelPlot.XVariable = DEBRIX.ElapsedDays;
+FuelPlot.YVariables = {CurrentFuel};
+FuelPlot.ShowGrid = true;
+FuelPlot.ShowPlot = true;
+
+% --- 4. Altitude Plot (The De-Orbit Dive) ---
+Create XYPlot AltitudePlot;
+AltitudePlot.SolverIterations = Current;
+AltitudePlot.UpperLeft = [ 0.5 0.5 ]; % Bottom Right
+AltitudePlot.Size = [ 0.5 0.5 ]; 
+AltitudePlot.XVariable = DEBRIX.ElapsedDays;
+AltitudePlot.YVariables = {DEBRIX.Earth.Altitude};
+AltitudePlot.ShowGrid = true;
+AltitudePlot.ShowPlot = true;
+
+Create ReportFile StatusReport;
+StatusReport.Filename = 'DEBRIX_Mission_Log.txt';
+StatusReport.Add = {DEBRIX.ElapsedDays, Range, CurrentFuel, DEBRIX.Earth.Altitude};
+
+%--------------------------------------------------------------------------
+%   6. MISSION SEQUENCE
+%--------------------------------------------------------------------------
+BeginMissionSequence;
+
+% --- SCENE 1: SCANNING THE CLOUD ---
+% Propagate for 0.5 days to let the junk spread out
+Propagate SpaceProp(DEBRIX, Junk_Primary, Junk_High, Junk_Low, Junk_Skew) {DEBRIX.ElapsedDays = 0.5};
+
+% Update Variables for Plotting
+CurrentFuel = DEBRIX.FuelTank1.FuelMass;
+RelX = DEBRIX.X - Junk_Primary.X;
+RelY = DEBRIX.Y - Junk_Primary.Y;
+RelZ = DEBRIX.Z - Junk_Primary.Z;
+Range = Sqrt(RelX^2 + RelY^2 + RelZ^2);
+
+% --- SCENE 2: TARGET ACQUIRED & CHASE ---
+% Fire thrusters to catch the Primary Junk
+Maneuver Catch_Burn(DEBRIX);
+
+% Propagate 1.0 Day (The Chase)
+Propagate SpaceProp(DEBRIX, Junk_Primary, Junk_High, Junk_Low, Junk_Skew) {DEBRIX.ElapsedDays = 1.0};
+
+% Update Variables
+RelX = DEBRIX.X - Junk_Primary.X;
+RelY = DEBRIX.Y - Junk_Primary.Y;
+RelZ = DEBRIX.Z - Junk_Primary.Z;
+Range = Sqrt(RelX^2 + RelY^2 + RelZ^2);
+CurrentFuel = DEBRIX.FuelTank1.FuelMass;
+
+% --- SCENE 3: CAPTURE & DEORBIT BURN ---
+% We are close. Fire Retro-Rockets!
+Maneuver Kill_Burn(DEBRIX);
+
+% --- SCENE 4: THE DIVE ---
+% Watch the altitude drop as we re-enter atmosphere
+Propagate SpaceProp(DEBRIX, Junk_Primary, Junk_High, Junk_Low, Junk_Skew) {DEBRIX.ElapsedDays = 0.4};
+
+% Final Status
+CurrentFuel = DEBRIX.FuelTank1.FuelMass;
